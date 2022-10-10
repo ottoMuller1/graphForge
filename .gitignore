@@ -1,0 +1,6 @@
+.stack-work/
+/app
+/test
+CHANGELOG.md
+graph.cabal
+*~
