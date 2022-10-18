@@ -18,7 +18,7 @@ type family Morphism a where
 -------------------------features--------------------------
 --- - - - - - - - - outside using - - - - - - - - - ---
 -- let's write syntax for graph implementation
--- start building of a tree throw state - relation
+-- start building of trees throw state - tree
 build :: 
     ( Monad m, Eq a ) => 
     Building a m -> 
@@ -33,18 +33,17 @@ build plan throw relations = do
 by :: Eq a => Morphism ( Tree a )
 by = id
 -- here we have syntax like
--- build "some Building" by "some Graph"
--- and return monadical ( "some Trees", "state Graph )
+-- build "some Building" by "some Tree"
+-- and return monadical ( "some Trees", "state Tree" )
 -- or
--- build "some Building" by $ R.upLevel "state Relation"
+-- build "some Building" by $ "fuctor" <$> "state Tree"
 
 --- - - - - - - - - - - inside using - - - - - - - - - - - ---
--- if we need to use empty graph from begining
 -- then we use begin
 begin :: ( Monad m, Eq a ) => Building a m
 begin = StateT $ \s -> return ( [], s )
 
--- a new relation to tree by mixing
+-- a new relation to tree by adding
 add :: ( Monad m, Eq a ) => Relation a -> [ Tree a ] -> Building a m
 add relation trees = StateT $ \s -> return ( G.dnaOfTree $ relation :/\: [] : trees , s )
 
