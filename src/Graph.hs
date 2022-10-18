@@ -7,11 +7,9 @@ module Graph where
 import Relation ( 
     Relation ( .. ),
     Weight ( .. ) )
-
 import qualified Relation as Rel
 
 import Data.Kind ( Type )
-
 import Data.Set ( 
     fromList, 
     toList )
@@ -79,6 +77,44 @@ instance {-# OVERLAPPING #-} Show a => Show [ Tree a ] where
 instance Functor Tree where
     fmap _ Fault = Fault
     fmap f ( rel :/\: tree ) = ( f <$> rel ) :/\: ( fmap f <$> tree )
+
+-- Applicative
+instance Applicative Tree where
+    pure a = pure a :/\: []
+    Fault <*> _ = Fault 
+    _ <*> Fault = Fault
+    ( fRel :/\: fTrees ) <*> ( rel :/\: trees ) =
+        ( fRel <*> rel ) :/\: zipWith ( <*> ) fTrees trees
+
+instance Monad Tree where
+    return = pure
+    Fault >>= _ = Fault
+    ( rel :/\: trees ) >>= f = 
+        case rel of
+            ( _ :--- a ) -> 
+                let
+                    rel' :/\: trees' = f a
+                    ( n, m ) = Rel.nodes rel'
+                in
+                    rel' :/\: ( trees' ++ ( helper m . ( >>= f ) <$> trees ) )
+            ( _ :>-- a ) ->
+                let
+                    rel' :/\: trees' = f a
+                    ( n, m ) = Rel.nodes rel'
+                in
+                    rel' :/\: ( trees' ++ ( helper m . ( >>= f ) <$> trees ) )
+            ( _ :>-< a ) ->
+                let
+                    rel' :/\: trees' = f a
+                    ( n, m ) = Rel.nodes rel'
+                in
+                    rel' :/\: ( trees' ++ ( helper m . ( >>= f ) <$> trees ) )
+        where
+            helper :: a -> Tree a -> Tree a
+            helper _ Fault = Fault
+            helper a ( b :--- c :/\: t ) = a :--- c :/\: t
+            helper a ( b :>-- c :/\: t ) = a :>-- c :/\: t
+            helper a ( b :>-< c :/\: t ) = a :>-< c :/\: t
 
 -- Monoid
 instance Eq a => Monoid ( Tree a ) where
