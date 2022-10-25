@@ -2,7 +2,20 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 
-module Graph where
+module Graph ( 
+    Graph ( .. ), 
+    Tree ( .. ),
+    doSimple,
+    width,
+    treeSize,
+    treeToGraph,
+    treesToGraph,
+    nodes,
+    kids,
+    getTrees,
+    dnaOfGraph,
+    noRepeatSimpleGraph,
+    noRepeatWeightGraph ) where
 
 import Relation ( 
     Relation ( .. ),
