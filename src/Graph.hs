@@ -44,7 +44,7 @@ instance Eq a => Semigroup ( Tree a ) where
             if right `notElem` trees1 
             then rel1 :/\: ( trees1 ++ [ right ] )
             else left
-        | rel1 == rel2 = rel1 :/\: ( trees1 ++ filter ( `notElem` trees1 ) trees2 )
+        | rel1 == rel2 = rel1 :/\: dnaOfTree ( trees1 ++ filter ( `notElem` trees1 ) trees2 )
         | left > right = rel1 :/\: subMapping trees1 right
         | otherwise = left
         where
