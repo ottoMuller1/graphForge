@@ -6,12 +6,8 @@ module Graph (
     Graph ( .. ), 
     Tree ( .. ),
     doSimple,
-    width,
     treeSize,
-    treeToGraph,
     treesToGraph,
-    nodes,
-    kids,
     getTrees,
     dnaOfGraph,
     noRepeatSimpleGraph,
@@ -21,6 +17,7 @@ import Relation (
     Relation ( .. ),
     Weight ( .. ) )
 import qualified Relation as Rel
+import qualified Features as F
 
 import Data.Kind ( Type )
 import Data.Set ( 
@@ -42,9 +39,9 @@ instance Eq a => Semigroup ( Tree a ) where
     left@( rel1 :/\: trees1 ) <> right@( rel2 :/\: trees2 )
         | rel1 > rel2 = 
             if right `notElem` trees1 
-            then rel1 :/\: ( trees1 ++ [ right ] )
+            then rel1 :/\: ( dnaOfGraph $ noRepeatSimpleGraph $ nodes $ trees1 ++ [ right ] )
             else left
-        | rel1 == rel2 = rel1 :/\: dnaOfTree ( trees1 ++ filter ( `notElem` trees1 ) trees2 )
+        | rel1 == rel2 = rel1 :/\: ( dnaOfGraph $ noRepeatSimpleGraph $ nodes $ trees1 ++ filter ( `notElem` trees1 ) trees2 )
         | left > right = rel1 :/\: subMapping trees1 right
         | otherwise = left
         where
@@ -53,6 +50,13 @@ instance Eq a => Semigroup ( Tree a ) where
             subMapping ( l : ls ) r
                 | l <> r == l = l : subMapping ls r
                 | otherwise = l <> r : ls
+
+            nodes :: Eq a => [ Tree a ] -> Graph a ()
+            nodes trees = mconcat $ node <$> trees
+
+            node :: Eq a => Tree a -> Graph a ()
+            node Fault = []
+            node ( rel :/\: trees ) = rel : nodes trees
 
 -- Ord
 -- note, that tree1 > tree2, when root of tree2 less then one of roots of tree1
@@ -175,26 +179,6 @@ treeToGraph ( rel :/\: trees ) =
 treesToGraph :: Eq a => [ Tree a ] -> Graph a ()
 treesToGraph trees = mconcat $ treeToGraph <$> trees
 
--- get nodes of graph
-nodes :: Eq a => Graph a () -> [ a ]
-nodes = let
-    iter :: Graph a () -> [ a ]
-    iter [] = []
-    iter ( ( a :--- b ) : graph ) = a : b : iter graph
-    iter ( ( a :>-- b ) : graph ) = a : b : iter graph
-    iter ( ( a :>-< b ) : graph ) = a : b : iter graph
-
-    reps :: Eq a => [ a ] -> [ a ] -> [ a ]
-    reps new [] = new
-    reps new ( x : old )
-        | x `elem` new = reps new old
-        | otherwise = reps ( x : new ) old
-    in reps [] . iter
-
--- find kids of every relation
-kids :: Eq a => Graph a () -> [ Tree a ]
-kids graph = [ rel :/\: [ rel' :/\: [] | rel' <- graph, rel > rel' && Rel.nodes rel /= Rel.nodes rel' ] | rel <- graph ]
-
 -- begin of tree o2, refactor!
 beginTree :: Eq a => [ Tree a ] -> [ Tree a ]
 beginTree trees = [ tree | tree <- trees, tree > tree || null [ tree' | tree' <- trees, tree' > tree ] ]
@@ -216,11 +200,7 @@ treeSorting trees = let left = beginTree trees in
     left ++ sortMethod [ tree | tree <- trees, tree `notElem` left ]
     where
         sortMethod :: Eq a => [ Tree a ] -> [ Tree a ]
-        sortMethod [] = []
-        sortMethod ( x : xs ) = 
-            sortMethod [ y | y <- xs, x <= y ] ++ 
-            [ x ] ++ 
-            sortMethod [ y | y <- xs, x > y ]
+        sortMethod = F.insert
 
 -- getting classes
 classBuilder :: Eq a => [ Tree a ] -> [ Tree a ]

@@ -22,6 +22,9 @@ quite :: ( Eq a, Monad b ) => TreeBuilder a b
 quite = return Fault
 
 -- build TreeBuilder
+{-
+"some building" `buildBy` "fome function"
+-}
 buildBy :: ( Eq a, Monad b ) => TreeBuilder a b -> ( Tree a -> Tree a ) -> b ( Tree a )
 tb `buildBy` f = fst <$> runStateT tb f
 
@@ -29,11 +32,24 @@ tb `buildBy` f = fst <$> runStateT tb f
 absorbes :: ( Eq a, Monad b ) => Tree a -> Graph a () -> TreeBuilder a b
 tree `absorbes` graph = return $ foldl (<>) tree $ G.dnaOfGraph graph
 {-
-quite >>= absorbes "Tree"
+quite >>= flip absorbes "Graph"
 
 or
 
 do
     tree <- quite
     tree `absorbes` "Graph"
+-}
+
+-- applying of state function to evaluation
+apply :: ( Eq a, Monad b ) => Tree a -> TreeBuilder a b
+apply tree = StateT $ \s -> return ( s tree, s )
+{-
+"some building" >>= apply
+
+or
+
+do
+    tree <- "some building"
+    apply tree
 -}
