@@ -13,7 +13,7 @@ import Control.Monad.Trans.State ( StateT ( .. ) )
 -- evaluation is Tree a
 -- state is Tree a -> Tree a
 type TreeBuilder gTp monad = 
-    StateT ( Tree gTp -> Tree gTp ) monad ( Tree gTp )
+    StateT ( Tree gTp -> Tree gTp ) monad ( Tree gTp ) 
 
 -------------------------features--------------------------
 --- - - - - - - - - - - inside TreeBuilder - - - - - - - - ---
